@@ -30,6 +30,7 @@ def format_for_lm(row):
     """
     Format a row for language model fine-tuning.
     Creates a prompt-response pair suitable for instruction fine-tuning.
+    Includes a 3-dimensional vector representing the three classification labels.
     """
     # Get the class label
     class_label = row['class']
@@ -43,19 +44,75 @@ def format_for_lm(row):
     # Create the instruction/prompt
     question = f"Analyze the following tweet for hate speech or offensive language: \"{row['tweet']}\""
     
-    # Create a detailed analysis (for CoT - Chain of Thought)
-    analysis = (f"This tweet contains language that can be classified as {label_text}. "
-               f"The tweet has been reviewed by multiple annotators, with {row['hate_speech']} "
-               f"classifying it as hate speech, {row['offensive_language']} as offensive language, "
-               f"and {row['neither']} as neither.")
+    # Create a 3-dimensional vector representing the labels
+    # Normalize the counts to create a probability distribution
+    total_annotations = row['hate_speech'] + row['offensive_language'] + row['neither']
+    if total_annotations > 0:  # Avoid division by zero
+        label_vector = [
+            float(row['hate_speech']) / total_annotations,
+            float(row['offensive_language']) / total_annotations,
+            float(row['neither']) / total_annotations
+        ]
+    else:
+        label_vector = [0.0, 0.0, 0.0]
     
-    # Create the response
-    response = f"This tweet contains {label_text}."
+    # Get the highest probability and its index
+    max_prob = max(label_vector)
+    max_index = label_vector.index(max_prob)
+    
+    # Determine confidence level based on the highest probability
+    if max_prob >= 0.75:
+        confidence = "high confidence"
+    elif max_prob >= 0.5:
+        confidence = "moderate confidence"
+    else:
+        confidence = "low confidence"
+    
+    # Create a detailed analysis with reasoning (for CoT - Chain of Thought)
+    analysis = (f"This tweet contains language that can be classified as {label_text}. "
+                f"The tweet has been reviewed by multiple annotators, with {row['hate_speech']} "
+                f"classifying it as hate speech, {row['offensive_language']} as offensive language, "
+                f"and {row['neither']} as neither.\n\n"
+                f"The distribution of annotations shows that {label_vector[0]:.2f} of reviewers considered "
+                f"this hate speech, {label_vector[1]:.2f} classified it as offensive language, and "
+                f"{label_vector[2]:.2f} found it to be neither.\n\n")
+    
+    # Add reasoning based on the distribution
+    if max_prob < 0.5:
+        analysis += (f"There is significant disagreement among annotators about the nature of this content. "
+                    f"This suggests the content may be ambiguous or context-dependent in its interpretation.")
+    elif max_prob >= 0.75:
+        analysis += (f"There is strong consensus among annotators that this content should be classified as "
+                    f"{['hate speech', 'offensive language', 'neither hate speech nor offensive language'][max_index]}.")
+    else:
+        analysis += (f"There is moderate agreement among annotators, with a leaning toward "
+                    f"{['hate speech', 'offensive language', 'neither hate speech nor offensive language'][max_index]}, "
+                    f"but some disagreement exists.")
+    
+    # Second highest category
+    if max_index != 0 and label_vector[0] > 0.2:
+        analysis += f" However, a notable portion ({label_vector[0]:.2f}) considered it hate speech, which suggests some concerning elements."
+    elif max_index != 1 and label_vector[1] > 0.2:
+        analysis += f" A significant minority ({label_vector[1]:.2f}) found it offensive, though not rising to the level of hate speech."
+    
+    # Create a more nuanced response based on the vector
+    if max_prob >= 0.75:
+        response = f"This tweet contains {label_text} with {confidence}. The strong consensus among annotators ({max_prob:.2f}) indicates clear {label_text} characteristics."
+    elif max_prob >= 0.5:
+        response = f"This tweet likely contains {label_text}, though with {confidence} ({max_prob:.2f}). There is some disagreement in how to classify this content."
+    else:
+        second_highest = sorted(label_vector, reverse=True)[1]
+        second_index = label_vector.index(second_highest)
+        second_label = ['hate speech', 'offensive language', 'neither hate speech nor offensive language'][second_index]
+        response = (f"This tweet shows characteristics of {label_text}, but with {confidence} ({max_prob:.2f}). "
+                   f"A substantial portion of annotators ({second_highest:.2f}) classified it as {second_label}, "
+                   f"indicating significant ambiguity.")
     
     return {
         "Question": question,
         "Complex_CoT": analysis,
-        "Response": response
+        "Response": response,
+        "LabelVector": label_vector
     }
 
 def process_data(input_csv, output_dir, test_size=0.2, val_size=0.1, random_state=42):
