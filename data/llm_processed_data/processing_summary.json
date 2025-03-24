@@ -1,0 +1,41 @@
+{
+  "dataset_stats": {
+    "total_samples": 24783,
+    "training_original": 17347,
+    "training_after_augmentation": 12544,
+    "training_after_balancing": 12544,
+    "validation": 2479,
+    "test": 4957
+  },
+  "class_distribution": {
+    "original": {
+      "0": 1430,
+      "1": 19190,
+      "2": 4163
+    },
+    "training_final": {
+      "0": 2914,
+      "1": 6716,
+      "2": 2914
+    },
+    "validation": {
+      "0": 143,
+      "1": 1920,
+      "2": 416
+    },
+    "test": {
+      "0": 286,
+      "1": 3838,
+      "2": 833
+    }
+  },
+  "processing_params": {
+    "test_size": 0.2,
+    "val_size": 0.1,
+    "random_state": 42,
+    "balance_method": "combined",
+    "apply_balance": true,
+    "augmentation": "gpt4o",
+    "augment_samples": 10
+  }
+}
