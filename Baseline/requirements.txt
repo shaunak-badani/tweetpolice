@@ -1,0 +1,7 @@
+torch
+transformers
+peft
+datasets
+matplotlib
+accelerate
+safetensors
