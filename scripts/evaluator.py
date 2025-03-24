@@ -1,4 +1,4 @@
-from make_dataset import HateSpeechDataset
+from scripts.make_dataset import HateSpeechDataset
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
