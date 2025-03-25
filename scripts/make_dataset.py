@@ -5,14 +5,14 @@ class HateSpeechDataset:
     """
     A class to handle all helper functions to load the hate speech
     """
-    TEST_DATA_PATH = "./data/processed_data/test.json"
-    TRAIN_DATA_PATH = "./data/processed_data/train.json"
+    VAL_DATA_PATH = "./data/random_over/val.json"
+    TRAIN_DATA_PATH = "./data/random_over/train.json"
 
     @staticmethod
-    def process_data(tokenizer, data_path = TEST_DATA_PATH):
+    def process_data(tokenizer, data_path = VAL_DATA_PATH):
         if tokenizer.pad_token is None:
             tokenizer.pad_token = '[PAD]'
-        dataset = load_dataset("json", data_files=data_path, split="train[:1500]")
+        dataset = load_dataset("json", data_files=data_path, split="train")
 
         def format_example(example):
             instruction = example['Question']

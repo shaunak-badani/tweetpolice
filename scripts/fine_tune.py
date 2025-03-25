@@ -36,10 +36,10 @@ class LoraFineTuner:
             output_dir=LoraFineTuner.OUTPUT_PATH,
             per_device_train_batch_size=4,  # storage limited.
             gradient_accumulation_steps=8,  # accumulate gradient, batch_size=8
-            num_train_epochs=1,
+            num_train_epochs=0.2,
             learning_rate=3e-4,
             fp16=True,
-            logging_steps=1,
+            logging_steps=500,
             save_strategy="no",
             report_to="none",
             optim="adamw_torch",
