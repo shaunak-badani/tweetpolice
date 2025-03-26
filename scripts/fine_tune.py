@@ -7,6 +7,7 @@ from transformers import (
 import torch
 
 class LoraFineTuner:
+    BASE_MODEL_OUTPUT_PATH = "./base_output"
     OUTPUT_PATH = "./output"
 
     @staticmethod
@@ -73,7 +74,7 @@ class CustomLossTrainer(Trainer):
         logits = outputs.logits
         labels = inputs['labels']
 
-        loss = torch.nn.CrossEntropyLoss(reduction='sum')
+        loss = torch.nn.CrossEntropyLoss(reduction='mean')
         # Compute cross-entropy loss
         loss_value = loss(
             logits,

@@ -9,7 +9,8 @@ def main():
     MODEL_NAME = "bert-base-uncased" 
     model = BertForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=3)  # Adjust num_labels based on the task
     tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)
-
+    model.save_pretrained(LoraFineTuner.BASE_MODEL_OUTPUT_PATH)
+    
     # Evaluate base model
     os.makedirs("evaluations", exist_ok = True)
     Evaluator.evaluate_model(model, tokenizer, "evaluations/base_model_stats.png")
@@ -31,6 +32,9 @@ def main():
     )
     # Run fine tuning
     trainer.train()
+
+    # Save the model
+    lora_model.save_pretrained(LoraFineTuner.OUTPUT_PATH)
 
     # Evaluate fine tuned model
     Evaluator.evaluate_model(lora_model, tokenizer, "evaluations/fine_tuned_model_stats.png")
