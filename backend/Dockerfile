@@ -10,6 +10,6 @@ COPY . .
 
 EXPOSE 8000
 
-WORKDIR /app/src
+WORKDIR /app
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
