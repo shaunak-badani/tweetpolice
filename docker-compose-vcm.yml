@@ -1,0 +1,15 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      args:
+        API_URL: http://vcm-45508.vm.duke.edu
+    ports:
+      - "80:80"
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+    

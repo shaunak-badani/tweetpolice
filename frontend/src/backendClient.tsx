@@ -21,10 +21,7 @@ backendClient.interceptors.response.use(
         }
         const message =
             error.response?.data?.detail || "Something went wrong with the API.";
-        const status = error.response?.status;
 
-        // log("API error:", { status, message });
-        
         globalStore.getState().setError(message);
         return Promise.resolve({ data: null, error: { message } });
     }

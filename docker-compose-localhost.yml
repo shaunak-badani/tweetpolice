@@ -1,0 +1,14 @@
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      args:
+        API_URL: http://localhost
+    ports:
+      - "80:80"
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend

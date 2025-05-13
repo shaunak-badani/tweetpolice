@@ -1,0 +1,10 @@
+services:
+  frontend:
+    container_name: frontend
+    image: codexregistry.azurecr.io/templateproject-frontend:latest
+    ports:
+      - "80:80"
+
+  backend:
+    container_name: backend
+    image: codexregistry.azurecr.io/templateproject-backend:latest
