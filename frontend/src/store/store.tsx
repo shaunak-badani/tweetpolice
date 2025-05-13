@@ -11,7 +11,7 @@ export type AppState = {
 const useGlobalStore = create<AppState>((set) => ({
   user: "Jonah",
   setUser: (user) => set({ user }),
-  information: ["This is a slow application. Please expect a delay of 10s - 2m in responses."],
+  information: ["This is a slow application. Please expect a delay of 2 - 5 seconds in responses."],
   error: null,
   setError: (error) => set({ error })
 }));
