@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-# DB functions
-from models import get_db, DataFetcher
-from schema import UserResponse
-from sqlalchemy.orm import Session
+
+# Inference libraries
+import onnxruntime as ort
+from transformers import BertTokenizer
+import numpy as np
 
 app = FastAPI(root_path='/api')
 
@@ -25,57 +26,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-@app.get("/")
-async def root():
+@app.get("/get-sentiment")
+def get_sentiment_for_prompt(input_text: str):
+    """
+    Query endpoint to get sentiment for query prompt
+    """
+    ort_session = ort.InferenceSession("models/model.onnx")
+    MODEL_NAME = "bert-base-uncased" 
+    tokenizer = BertTokenizer.from_pretrained(MODEL_NAME)   
+    input_dict = tokenizer(input_text, return_tensors="np", truncation=True, padding="max_length", max_length=512)
+    input_values = {
+        "input_ids": input_dict["input_ids"],
+        "token_type_ids": input_dict["token_type_ids"],
+        "attention_mask": input_dict["attention_mask"]
+    }
+    outputs = ort_session.run(None, input_values)[0]
+    outputs = outputs - outputs.max()
+    percentages = np.exp(outputs) 
+    percentages /= percentages.sum() 
+    percentages *= 100
+    keys = ["Hateful", "Offensive", "Neither hateful nor offensive"]
+    prediction = dict(zip(keys, map(float, percentages.flatten())))
     return JSONResponse(
-        content = {"message": "Hello world!"}
+        content = prediction
     )
-
-@app.get("/mean")
-def query_mean_model(query: str):
-    """
-    Query endpoint for the mean model
-    """
-    # Pass query to some function
-    answer = f"Response to the mean query : {query}"
-    # answer = f(query) 
-    return JSONResponse(
-        content = { "message": answer }
-    )
-
-@app.get("/traditional")
-def query_traditional_model(query: str):
-    """
-    Query endpoint for the traditional model
-    """
-    # Pass query to some function
-    answer = f"Response to the traditional query : {query}"
-    # answer = f(query) 
-    return JSONResponse(
-        content = {"message": answer}
-    )
-
-
-@app.get("/deep-learning")
-def query_deep_learning_model(query: str):
-    """
-    Query endpoint for the deep learning model
-    """
-    # Pass query to some function
-    answer = f"Response to the deep learning model query : {query}"
-    # answer = f(query) 
-    return JSONResponse(
-        content = {"message": answer}
-    )
-
-@app.get("/users", response_model=list[UserResponse])
-def get_users(db: Session = Depends(get_db)):
-    return DataFetcher.get_users(db)
-
-@app.get("/users/{user_id}", response_model = UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = DataFetcher.get_user(db, user_id)
-    if not user:
-        raise HTTPException(status_code = status.HTTP_404_NOT_FOUND)
-    return user
